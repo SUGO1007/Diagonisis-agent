@@ -1,0 +1,47 @@
+# ═══════════════════════════════════════════════════════════════
+# Requirements for Autonomous Incident Diagnosis & Resolution AI Tool
+# ═══════════════════════════════════════════════════════════════
+
+# Core Dependencies
+langgraph>=0.2.0
+langchain-core>=0.3.0
+openai>=1.30.0
+pydantic>=2.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+httpx>=0.25.0
+
+# vLLM for serving Qwen model (GPU acceleration)
+# Note: vLLM requires GPU with CUDA (NVIDIA) or ROCm (AMD)
+vllm>=0.6.0
+
+# Vector Database (for RAG - Retrieval Augmented Generation)
+chromadb>=0.4.0
+sentence-transformers>=2.2.0
+
+# Data Processing
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Optional: Development Tools (uncomment if needed)
+# pytest>=7.0
+# pytest-cov>=4.0
+# black>=23.0
+# isort>=5.0
+# flake8>=6.0
+
+# ═══════════════════════════════════════════════════════════════
+# Installation Instructions
+# ═══════════════════════════════════════════════════════════════
+#
+# Install all dependencies:
+#   pip install -r requirements.txt
+#
+# Or install with editable mode (for development):
+#   pip install -e .
+#
+# For GPU Support:
+#   - NVIDIA GPUs: Ensure CUDA 11.8+ or 12.1+ is installed
+#   - AMD GPUs: Ensure ROCm 5.7+ is installed
+#
+# ═══════════════════════════════════════════════════════════════

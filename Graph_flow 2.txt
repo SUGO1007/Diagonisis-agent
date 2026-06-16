@@ -1,0 +1,97 @@
+                                   [START]
+                                      │
+                                      │ raw alert from monitoring
+                                      ▼
+                            ┌───────────────────┐
+                            │  MONITOR          │
+                            │ (Agent 1)         │
+                            │ • Enrich alert    │
+                            │ • Add context     │
+                            │ • Set priority    │
+                            └─────────┬─────────┘
+                                      │
+                                      │ enriched_alert
+                                      ▼
+                            ┌───────────────────┐
+                            │  DIAGNOSE         │
+                            │ (Agent 2)         │
+                            │ • Vector DB RAG   │
+                            │ • Get confidence  │
+                            └─────────┬─────────┘
+                                      │
+                                      │ diagnosis_complete
+                                      │
+                  ┌───────────────────┼───────────────────┐
+                  │ confidence < 85%    confidence > 85%  │
+                  ▼                                       ▼
+      ┌───────────────────┐                          ┌───────────────────┐
+      │  GATHER_INFO      │                          │ PLAN_REMEDIATION  │
+      │ (Agent 3)         │                   ┌----> │ (Agent 4)         │
+      │ • ReAct Loop      │                   |      └─────────┬─────────┘
+      │   (Reason→Act)    │                   |           │
+      │ • Gather data     │                   |           │
+      │ • ↑ Confidence    │                   |           │
+      └─────────┬─────────┘                   |           │
+                │ gathering_complete          |           │
+                │                             |           │
+   ┌────────────┼────────────┐                |           │
+   │ confidence   confidence │                |           │
+   │   < 85%        >= 85%   │                |           │
+   ▼                         ▼                │           |           
+┌─────────┐                  └----------------┘           │                   
+│ESCALATE ├                                               │
+└─────────┘                           --------------------│
+                                      |                   
+                                      ▼                   
+                            ┌───────────────────┐ ┌───────────────────┐
+                            │ CHECK_COMPLIANCE  │ │ HUMAN_LOOP        │
+                            │ (Agent 4)         │ │ (Slack/Teams)     │
+                            │ • Check policies  │ │ • Wait for approve│
+                            └─────────┬─────────┘ └─────────┬─────────┘
+                                      │                     │
+                                      │ compliance_checked  │
+                                      │                     │
+                  ┌───────────────────┼───────────────────┐
+                  │ approval_needed     no_approval_needed│
+                  ▼                                       ▼
+            ┌───────────────────┐               ┌───────────────────┐
+            │ HUMAN_LOOP        │               │  EXECUTE_FIX      │
+            │ (Slack/Teams)     │               │ (Agent 4)         │
+            └──────────┬────────┘               │ • Pre-checks      │
+                       |------                  │ • Execute action  │
+                             │                  │ • Post-checks     │
+                             │                  └─────────┬─────────┘
+                             │                            │
+                             │                            │ execution_result
+                             │                            │
+                             └────────────┬───────────────┘
+                                          │
+                                          ▼
+                                  ┌───────────────────┐
+                                  │  VALIDATE         │
+                                  │ (Agent 4)         │
+                                  │ • Check result    │
+                                  └─────────┬─────────┘
+                                            │
+                                            │
+                               ┌────────────┼────────────┐
+                               │ success    │ failure     │
+                               ▼            ▼            ▼
+                       ┌───────────┐  ┌──────────┐  ┌──────────┐
+                       │ RESOLVED  │  │ ROLLBACK │  │ ESCALATE │
+                       └─────┬─────┘  │(Agent 4) │  └────┬─────┘
+                             │        └────┬─────┘       │
+                             │             │             │
+                             └──────┬──────┘             │
+                                    │                    │
+                                    │ incident_closed    │
+                                    ▼                    ▼
+                            ┌───────────────────┐  ┌──────────┐
+                            │  LEARN & CLOSE    │  │  NOTIFY  │
+                            │ (Agent 5)         │  │ (on-call)│
+                            │ • Update Vector DB│  └──────────┘
+                            │ • Generate runbook│
+                            └─────────┬─────────┘
+                                      │
+                                      ▼
+                                   [END]

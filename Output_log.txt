@@ -1,0 +1,216 @@
+[CONFIG] LLM Configuration:
+   Base URL: http://localhost:8000/v1
+   Model: Qwen3-30B-A3B
+   API Key: ***-123
+   Connection: FAILED - <style type="text/css">
+a.norm:link, a.norm:visited { font-size:9pt; font-famil
+
+[WARNING] LLM server not reachable at http://localhost:8000/v1
+   The workflow will use fallback responses.
+   To use real LLM, start vLLM:
+   vllm serve Qwen/Qwen3-30B-A3B --served-model-name Qwen3-30B-A3B --api-key abc-123 --port 8000
+[DATA INGESTION] Running Pipeline...
+------------------------------------------------------------
+  [COLLECT]  20 raw metric events ingested
+  [ENRICH]   16/20 events enriched with CMDB data
+  [DETECT]   6 anomalies detected
+------------------------------------------------------------
+[ANOMALIES] Requiring Investigation:
+   [CRITICAL] prod-web-07: cpu_percent=98.5% (threshold=95%) | tier=critical
+   [CRITICAL] prod-web-07: load_avg_1m=12.4% (threshold=12%) | tier=critical
+   [WARNING ] prod-db-01: memory_percent=88.5% (threshold=95%) | tier=unknown
+   [WARNING ] prod-cache-02: memory_percent=92.0% (threshold=95%) | tier=critical
+   [CRITICAL] prod-batch-01: cpu_percent=95.0% (threshold=95%) | tier=batch
+   [WARNING ] prod-batch-01: load_avg_1m=8.0% (threshold=12%) | tier=batch
+
+======================================================================
+  AUTONOMOUS INCIDENT DIAGNOSIS & RESOLUTION AI TOOL
+  LangGraph Orchestrator | Qwen LLM | MCP Tools
+======================================================================
+
+[DATA INGESTION] Pipeline Results:
+   Events collected: 20
+   Events enriched: 16
+   Anomalies detected: 6
+   Critical: 3 | Warning: 3
+
+[ALERT] Triggering incident response for:
+   Server: prod-web-07
+   Metric: CPU 98.5% (threshold: 95%)
+   Duration: 47m
+   Severity: critical
+
+======================================================================
+[LANGGRAPH] Building incident response graph...
+======================================================================
+[LANGGRAPH] Executing workflow...
+[LANGGRAPH] Nodes: monitor -> diagnose -> [gather_info] -> plan -> comply -> execute -> validate -> learn
+
+======================================================================
+[AGENT-1] MONITOR AGENT - Alert Ingestion & Enrichment
+======================================================================
+
+[ALERT] Raw Alert: HighCPU on prod-web-07
+[MCP] get_server_metadata(prod-web-07) -> datacenter: us-east-1
+[MCP] get_service_info(data-transform) -> tier: batch
+[MCP] get_recent_changes(prod-web-07) -> 0 changes found
+
+[LLM] Monitor Agent reasoning:
+   Priority: P2
+   Service Tier: batch
+   Blast Radius: Server prod-web-07 and dependent services
+
+======================================================================
+[AGENT-2] DIAGNOSIS AGENT - Root Cause Analysis (Vector DB RAG)
+======================================================================
+[RAG] Loading knowledge base from: D:\AI experiment\AUTONOMOUS_INCIDENT_DIAGNOSIS_RESOLUTION_AI_TOOL\rag
+[RAG] Embedding model: all-MiniLM-L6-v2
+   [OK] incident_history.txt: 7 chunks (6208 chars)
+   [OK] infrastructure_inventory.txt: 5 chunks (2795 chars)
+   [OK] runbooks.txt: 5 chunks (6049 chars)
+   [OK] service_catalog.txt: 6 chunks (3835 chars)
+   [OK] system_topology.txt: 8 chunks (8405 chars)
+   [OK] tool_knowledge.txt: 12 chunks (9798 chars)
+
+[RAG] Loading 12 tool schemas from TOOL_REGISTRY...
+   [OK] Tool schemas: 12 tools indexed
+[RAG] Generating embeddings for 55 chunks...
+python : Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable
+higher rate limits and faster downloads.
+At line:1 char:2
++  python main.py 2>&1
++  ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Warning: You ar...ster downloads.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]
+Loading weights: 100%|##########| 103/103 [00:00<00:00, 6437.20it/s]
+[RAG] Indexed 55 chunks into ChromaDB (collection: incident_knowledge)
+
+[RAG] Vector DB search (ChromaDB + sentence-transformers):
+   Query: "High cpu percent alert on prod-web-07 service data-transform severity critical High CPU alert on pro"
+   Incidents found: 5
+   Runbooks found: 3
+   Service info found: 2
+   Tool suggestions: 3
+[MCP] Gathered: 4 logs, metrics, 5 processes
+
+[LLM] Diagnosis Agent reasoning:
+   Root Cause: ETL batch job deadlock causing CPU saturation - process 5510 consuming 95%+ CPU for 47 minutes with connection pool exhaustion
+   Confidence: 72%
+   Evidence: 5 items
+   Requires More Info: True
+
+[ROUTE] Confidence 72% < 85% -> Need more information
+
+======================================================================
+[AGENT-3] INFORMATION GATHERING AGENT - ReAct Loop
+======================================================================
+
+[START] Initial confidence: 72%, Target: 85%
+
+   Iteration 1/5:
+      REASON: Current diagnosis: ETL batch job deadlock causing CPU saturation - process 5510 consuming 95%+ CPU f...
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]
+Loading weights: 100%|##########| 103/103 [00:00<00:00, 6437.87it/s]
+      ACT: get_process_list({"host": "prod-web-07"})
+      OBSERVE: {"host": "prod-web-07", "process_count": 5, "processes": [{"pid": 1, "name": "systemd", "cpu": 0.1, "memory_mb": 12, "us...
+      UPDATE: Confidence 80% (+8%)
+
+   Iteration 2/5:
+      REASON: Current diagnosis: ETL batch job deadlock causing CPU saturation - process 5510 consuming 95%+ CPU f...
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]
+Loading weights: 100%|##########| 103/103 [00:00<00:00, 6865.31it/s]
+      ACT: get_process_list({"host": "prod-web-07"})
+      OBSERVE: {"host": "prod-web-07", "process_count": 5, "processes": [{"pid": 1, "name": "systemd", "cpu": 0.1, "memory_mb": 12, "us...
+      UPDATE: Confidence 88% (+8%)
+
+[DONE] Final confidence: 88% after 2 iterations
+
+[ROUTE] Post-gathering confidence 88% >= 85% -> Proceed to remediation
+
+======================================================================
+[AGENT-4] REMEDIATION AGENT - Planning Phase
+======================================================================
+
+[PLAN] Remediation Plan:
+   Action: kill_process
+   Target: {"host": "prod-web-07", "pid": 5510, "service": "data-transform"}
+   Risk Level: low
+   Recovery Time: 120s
+   Pre-checks: 3
+   Post-checks: 4
+
+======================================================================
+[AGENT-4] COMPLIANCE CHECK
+======================================================================
+
+[COMPLIANCE] AUTO-REMEDIATION ALLOWED
+   Service Tier: batch
+   Risk Level: low
+   Policy: Auto-remediation permitted
+
+======================================================================
+[AGENT-4] REMEDIATION AGENT - Execution Phase
+======================================================================
+
+[PRE-FLIGHT] Running pre-checks...
+   [OK] Verify process still running and consuming CPU
+   [OK] Confirm no critical transactions in progress
+   [OK] Verify backup/checkpoint exists
+
+[EXECUTE] Performing: kill_process
+   [MCP] kill_process(prod-web-07, 5510) -> Process 5510 (python3 etl_batch.py) terminated with SIGTERM
+
+[POST-FLIGHT] Running post-checks...
+   [OK] CPU usage drops below 50%
+   [OK] No new error logs within 60 seconds
+   [OK] Service health check passes
+   [OK] Dependent services unaffected
+
+======================================================================
+[VALIDATE] Checking fix effectiveness
+======================================================================
+
+[MCP] Service health: UNHEALTHY
+   Status: resolved
+   Reason: Post-checks passed and service health confirmed
+
+[RESOLVED] Incident successfully resolved!
+
+======================================================================
+[AGENT-5] LEARNER AGENT - Learn & Close
+======================================================================
+
+[LEARN] Pattern extracted:
+   Trigger: High CPU + ETL batch job + recent deployment
+   Category: resource_exhaustion
+   Confidence: 92%
+
+[RUNBOOK] Update: For ETL batch CPU spikes: Check recent config changes (batch_size), kill PID if runtime > 30min, rev
+
+[CLOSE] Incident closed. Pattern stored in Vector DB for future RAG.
+
+======================================================================
+[SUMMARY] WORKFLOW COMPLETE
+======================================================================
+
+   Outcome: RESOLVED
+   Total Time: 16.4s
+   Final Confidence: 88%
+   Root Cause: ETL batch job deadlock causing CPU saturation - process 5510 consuming 95%+ CPU
+   Gathering Iterations: 2
+   Approval Needed: False
+
+   Pattern Learned:
+      Trigger: High CPU + ETL batch job + recent deployment
+      Category: resource_exhaustion
+
+   Lessons Learned:
+      - Config changes to batch_size should have CPU guardrails
+      - ETL jobs need timeout enforcement
+      - Recent deployment correlation was key signal
+
+======================================================================
+[DONE] LangGraph workflow finished with outcome: resolved
+======================================================================
